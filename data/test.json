@@ -1,0 +1,13 @@
+{
+    "numRows": 500,
+    "fields": [
+        {
+            "name": "A Number",
+            "type": "number"
+        },
+        {
+            "name": "A string",
+            "type": "string"
+        }
+    ]
+}
