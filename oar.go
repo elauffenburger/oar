@@ -4,8 +4,6 @@ import (
 	"flag"
 	"fmt"
 
-	"encoding/json"
-
 	"os"
 
 	oarconfig "github.com/elauffenburger/oar/configuration"
@@ -32,12 +30,6 @@ func main() {
 		panic(fmt.Sprintf("Error generating results: '%s'", err))
 	}
 
-	rows := results.AsRows()
-	marshalledbytes, err := json.Marshal(&rows)
-	if err != nil {
-		panic(fmt.Sprintf("Error marshalling results: '%s", err))
-	}
-
 	// print results as json to stdout
-	fmt.Fprint(os.Stdout, string(marshalledbytes))
+	fmt.Fprint(os.Stdout, results.ToJson())
 }

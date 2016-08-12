@@ -75,7 +75,7 @@ func TestCanConvertToRows(t *testing.T) {
 		t.Fail()
 	}
 
-	rows := results.AsRows()
+	rows := results.ToRows()
 	for _, row := range rows {
 		if row == nil {
 			t.Fail()
@@ -101,7 +101,28 @@ func TestWillGenerateRandomValues(t *testing.T) {
 	results1, _ := config.GenerateResults()
 	results2, _ := config.GenerateResults()
 
-	if results1.ResultSets[0].Entries[0].Value == results2.ResultSets[0].Entries[0].Value {
+	if results1.ResultSets[0].Entries[4].Value == results2.ResultSets[0].Entries[4].Value {
+		t.Fail()
+	}
+
+	if results1.ResultSets[0].Entries[4].Value == results1.ResultSets[1].Entries[4].Value {
+		t.Fail()
+	}
+}
+
+func TestCanConvertToJsonArray(t *testing.T) {
+	config, _ := oarconfig.LoadConfigurationFromFile("./data/test.json")
+
+	results, _ := config.GenerateResults()
+	jsonarray := results.ToJsonArray()
+
+	keys := jsonarray[0].Keys()
+	key := keys[4]
+
+	val1, _ := (*jsonarray[0])[key]
+	val2, _ := (*jsonarray[1])[key]
+
+	if val1 == val2 {
 		t.Fail()
 	}
 }

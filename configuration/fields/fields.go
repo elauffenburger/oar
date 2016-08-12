@@ -34,9 +34,9 @@ func NewConfigurationFields() ConfigurationFields {
 
 type NamesList []string
 
-func (list *NamesList) GetRandomValue() string {
-	src := rand.New(rand.NewSource(time.Now().Unix()))
+var src = rand.New(rand.NewSource(time.Now().UnixNano()))
 
+func (list *NamesList) GetRandomValue() string {
 	n := len(*list)
 	randomint := src.Int()
 

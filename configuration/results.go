@@ -1,6 +1,7 @@
 package configuration
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"time"
@@ -80,7 +81,49 @@ func (results *Results) NumEntries() int {
 	return len(results.ResultSets[0].Entries) * numrows
 }
 
-func (results *Results) AsRows() []EntryRow {
+type JsonObject map[string]string
+type JsonArray []*JsonObject
+
+func (obj JsonObject) Keys() []string {
+	keys := make([]string, len(obj))
+
+	i := 0
+	for key, _ := range obj {
+		keys[i] = key
+
+		i++
+	}
+
+	return keys
+}
+
+func (results *Results) ToJsonArray() JsonArray {
+	result := make(JsonArray, results.NumRows())
+
+	for i, set := range results.ResultSets {
+		object := make(JsonObject)
+
+		for _, entry := range set.Entries {
+			object[entry.Name] = entry.Value
+		}
+
+		result[i] = &object
+	}
+
+	return result
+}
+
+func (results *Results) ToJson() string {
+	jsonArray := results.ToJsonArray()
+	marshalledbytes, err := json.Marshal(&jsonArray)
+	if err != nil {
+		panic(fmt.Sprintf("Error marshalling results: '%s", err))
+	}
+
+	return string(marshalledbytes)
+}
+
+func (results *Results) ToRows() []EntryRow {
 	rows := NewRowsOfSize(results.NumRows())
 
 	for i, set := range results.ResultSets {
