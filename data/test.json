@@ -1,5 +1,5 @@
 {
-    "numRows": 500,
+    "numRows": 10,
     "fields": [
         {
             "name": "A Number",
@@ -8,6 +8,22 @@
         {
             "name": "A string",
             "type": "string"
+        },
+        {
+            "name": "First Name",
+            "type": "firstname"
+        },
+        {
+            "name": "Last Name",
+            "type": "lastname"
+        },
+        {
+            "name": "Full Name",
+            "type": "fullname"
         }
-    ]
+    ],
+    "options": {
+        "firstnames": "./data/firstnames.csv",
+        "lastnames": "./data/lastnames.csv"
+    }
 }
