@@ -5,9 +5,15 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
+
+	"strconv"
+
+	"sync"
 
 	fields "github.com/elauffenburger/oar/configuration/fields"
 )
@@ -127,4 +133,79 @@ func GetFieldTypeForField(field fields.ConfigurationField) (fields.Configuration
 	}
 
 	return converted, nil
+}
+
+func (config *Configuration) GenerateResults() (*Results, error) {
+	var wg sync.WaitGroup
+
+	numRows := config.NumRows
+	results := &Results{ResultSets: make(ResultSetList, numRows)}
+
+	for i := 0; i < numRows; i++ {
+		wg.Add(1)
+
+		go func(index int) {
+			defer wg.Done()
+
+			set := &ResultSet{}
+			for _, field := range config.Fields {
+				entry := &ResultSetEntry{ConfigurationField: *field}
+				entry.Value = config.GetValueForFieldTypeInSet(entry.FieldType, set)
+
+				set.Entries = append(set.Entries, entry)
+			}
+
+			results.ResultSets[index] = set
+		}(i)
+	}
+
+	wg.Wait()
+	return results, nil
+}
+
+func (config *Configuration) GetValueForFieldTypeInSet(fieldType fields.ConfigurationFieldType, set *ResultSet) string {
+	switch fieldType {
+	case fields.FirstName:
+		return config.NewFirstName()
+	case fields.LastName:
+		return config.NewLastName()
+	case fields.FullName:
+		entries := set.Entries
+
+		if entries.HasFirstAndLastNames() {
+			return config.NewFullNameFromNames(entries.GetFirstAndLastNames())
+		}
+	case fields.String:
+		return ""
+	case fields.Number:
+		return strconv.FormatInt(config.NewNumber(), 10)
+	case fields.DateTime:
+		return config.NewDateTime().Format(time.RFC1123Z)
+	}
+
+	return ""
+}
+
+func (config *Configuration) NewFirstName() string {
+	return config.FieldsData.FirstNames.GetRandomValue()
+}
+
+func (config *Configuration) NewLastName() string {
+	return config.FieldsData.LastNames.GetRandomValue()
+}
+
+func (config *Configuration) NewFullName() string {
+	return config.NewFullNameFromNames(config.NewFirstName(), config.NewLastName())
+}
+
+func (config *Configuration) NewNumber() int64 {
+	return rand.Int63()
+}
+
+func (config *Configuration) NewDateTime() time.Time {
+	return time.Unix(rand.Int63(), rand.Int63())
+}
+
+func (config *Configuration) NewFullNameFromNames(firstName string, lastName string) string {
+	return fmt.Sprintf("%s %s", firstName, lastName)
 }
