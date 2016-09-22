@@ -31,7 +31,7 @@ func main() {
 		config.NumRows = rows
 	}
 
-	results, err := config.GenerateResults()
+	results, err := core.GenerateResults(config)
 	if err != nil {
 		panic(fmt.Sprintf("Error generating results: '%s'", err))
 	}

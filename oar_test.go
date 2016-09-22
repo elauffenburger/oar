@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/elauffenburger/oar/core"
+	"github.com/elauffenburger/oar/core/output"
+	res "github.com/elauffenburger/oar/core/results"
 )
 
 func TestCanLoadFromFile(t *testing.T) {
@@ -14,7 +16,7 @@ func TestCanLoadFromFile(t *testing.T) {
 		t.Fail()
 	}
 
-	results, err := config.GenerateResults()
+	results, err := core.GenerateResults(config)
 
 	if err != nil {
 		t.Fail()
@@ -32,7 +34,7 @@ func TestCanLoadFromFile(t *testing.T) {
 func TestCanGenerateNames(t *testing.T) {
 	config, _ := core.LoadConfigurationFromFile("./test/test.json")
 
-	results, _ := config.GenerateResults()
+	results, _ := core.GenerateResults(config)
 	entries := results.ResultSets[0].Values
 
 	firstName, err := entries.GetEntryWithName("FirstName")
@@ -50,10 +52,10 @@ func TestCanGenerateNames(t *testing.T) {
 
 func TestCanConvertToRows(t *testing.T) {
 	config, _ := core.LoadConfigurationFromFile("./test/test.json")
-	results, _ := config.GenerateResults()
+	results, _ := core.GenerateResults(config)
 
 	numentries := results.NumEntries()
-	allEntries := make(map[*core.ResultsRowValue]bool)
+	allEntries := make(map[*res.ResultsRowValue]bool)
 
 	count := 0
 	for _, set := range results.ResultSets {
@@ -91,8 +93,8 @@ func TestCanConvertToRows(t *testing.T) {
 func TestWillGenerateRandomValues(t *testing.T) {
 	config, _ := core.LoadConfigurationFromFile("./test/test.json")
 
-	results1, _ := config.GenerateResults()
-	results2, _ := config.GenerateResults()
+	results1, _ := core.GenerateResults(config)
+	results2, _ := core.GenerateResults(config)
 
 	n, n2 := len(results1.ResultSets[0].Values)-1, len(results2.ResultSets[0].Values)-1
 	if n != n2 {
@@ -111,8 +113,10 @@ func TestWillGenerateRandomValues(t *testing.T) {
 func TestCanConvertToJsonArray(t *testing.T) {
 	config, _ := core.LoadConfigurationFromFile("./test/test.json")
 
-	results, _ := config.GenerateResults()
-	jsonarray := results.ToJsonArray()
+	results, _ := core.GenerateResults(config)
+
+	jsonformatter := &output.JsonOutputFormatter{}
+	jsonarray := jsonformatter.ToJsonArray(results)
 
 	keys := jsonarray[0].Keys()
 	key := keys[len(keys)-1]

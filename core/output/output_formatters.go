@@ -1,18 +1,20 @@
-package core
+package output
 
 import (
 	"encoding/json"
 	"fmt"
+
+	res "github.com/elauffenburger/oar/core/results"
 )
 
 type OutputFormatter interface {
-	Format(results *Results) string
+	Format(results *res.Results) string
 }
 
 type JsonOutputFormatter struct {
 }
 
-func (formatter *JsonOutputFormatter) Format(results *Results) string {
+func (formatter *JsonOutputFormatter) Format(results *res.Results) string {
 	jsonArray := formatter.ToJsonArray(results)
 	marshalledbytes, err := json.Marshal(&jsonArray)
 	if err != nil {
@@ -38,7 +40,7 @@ func (obj JsonObject) Keys() []string {
 	return keys
 }
 
-func (formatter *JsonOutputFormatter) ToJsonArray(results *Results) JsonArray {
+func (formatter *JsonOutputFormatter) ToJsonArray(results *res.Results) JsonArray {
 	result := make(JsonArray, results.NumRows())
 
 	for i, set := range results.ResultSets {
@@ -52,8 +54,4 @@ func (formatter *JsonOutputFormatter) ToJsonArray(results *Results) JsonArray {
 	}
 
 	return result
-}
-
-func GetOutputFormatter(config *Configuration) OutputFormatter {
-	return &JsonOutputFormatter{}
 }

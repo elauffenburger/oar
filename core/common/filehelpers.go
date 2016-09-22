@@ -1,4 +1,4 @@
-package core
+package common
 
 import (
 	"io/ioutil"
@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func readContentFromFile(path string) (*string, error) {
+func ReadContentFromFile(path string) (*string, error) {
 	_, err := os.Stat(path)
 	if err != nil {
 		return nil, err
@@ -21,8 +21,8 @@ func readContentFromFile(path string) (*string, error) {
 	return &str, nil
 }
 
-func readContentFromFileAndSplit(path string, sep string) ([]string, error) {
-	content, err := readContentFromFile(path)
+func ReadContentFromFileAndSplit(path string, sep string) ([]string, error) {
+	content, err := ReadContentFromFile(path)
 	if err != nil {
 		return nil, err
 	}

@@ -1,6 +1,10 @@
-package core
+package results
 
-import "fmt"
+import (
+	"fmt"
+
+	conf "github.com/elauffenburger/oar/core/configuration"
+)
 
 type ResultsRowList []*ResultsRow
 type Results struct {
@@ -13,7 +17,7 @@ type ResultsRow struct {
 }
 
 type ResultsRowValue struct {
-	ConfigurationField
+	conf.ConfigurationField
 	Value string
 }
 
