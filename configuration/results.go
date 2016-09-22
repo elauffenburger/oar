@@ -3,8 +3,6 @@ package configuration
 import (
 	"encoding/json"
 	"fmt"
-
-	"github.com/elauffenburger/oar/configuration/fields"
 )
 
 type ResultSetList []*ResultSet
@@ -18,7 +16,7 @@ type ResultSet struct {
 }
 
 type ResultSetEntry struct {
-	fields.ConfigurationField
+	ConfigurationField
 	Value string
 }
 
@@ -32,28 +30,14 @@ func (entries *EntryRow) GetEntryWithName(name string) (*ResultSetEntry, error) 
 	return nil, fmt.Errorf("Failed to find an entry with name '%s'", name)
 }
 
-func (entries *EntryRow) GetEntryWithType(entryType fields.ConfigurationFieldType) (*ResultSetEntry, error) {
+func (entries *EntryRow) GetEntryWithType(entryType string) (*ResultSetEntry, error) {
 	for _, entry := range *entries {
-		if entry.FieldType == entryType {
+		if entry.Type == entryType {
 			return entry, nil
 		}
 	}
 
 	return nil, fmt.Errorf("Failed to find an entry with type '%s'", entryType)
-}
-
-func (entries *EntryRow) HasFirstAndLastNames() bool {
-	_, firsterror := entries.GetEntryWithType(fields.FirstName)
-	_, lasterror := entries.GetEntryWithType(fields.LastName)
-
-	return firsterror == nil && lasterror == nil
-}
-
-func (entries *EntryRow) GetFirstAndLastNames() (string, string) {
-	first, _ := entries.GetEntryWithType(fields.FirstName)
-	last, _ := entries.GetEntryWithType(fields.LastName)
-
-	return first.Value, last.Value
 }
 
 func NewRowsOfSize(n int) []EntryRow {

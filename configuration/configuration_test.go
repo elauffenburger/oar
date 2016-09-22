@@ -2,8 +2,6 @@ package configuration
 
 import (
 	"testing"
-
-	fields "github.com/elauffenburger/oar/configuration/fields"
 )
 
 func TestLoadJsonConfiguration(t *testing.T) {
@@ -25,7 +23,7 @@ func TestLoadJsonConfiguration(t *testing.T) {
 	}
 
 	field := config.Fields[0]
-	if field.Name != "test" || field.Type != "number" || field.FieldType != fields.Number {
+	if field.Name != "test" || field.Type != "number" {
 		t.Errorf("Something else weird happened; field: %v", field)
 		t.Fail()
 	}

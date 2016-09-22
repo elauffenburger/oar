@@ -6,24 +6,56 @@
             "type": "number"
         },
         {
-            "name": "A string",
-            "type": "string"
-        },
-        {
-            "name": "First Name",
+            "name": "FirstName",
             "type": "firstname"
         },
         {
-            "name": "Last Name",
+            "name": "LastName",
             "type": "lastname"
         },
         {
-            "name": "Full Name",
+            "name": "FullName",
             "type": "fullname"
         }
     ],
     "options": {
-        "firstnames": "./data/firstnames.csv",
-        "lastnames": "./data/lastnames.csv"
+
+    },
+    "types": {
+        "number": {
+            "loader": {
+                "name": "number"
+            }
+        },
+        "firstname": {
+            "loader": {
+                "name": "csvloader",
+                "args": {
+                    "separator": "\n",
+                    "src": "./data/firstnames.csv"
+                }
+            }
+        },
+        "lastname": {
+            "loader": {
+                "name": "csvloader",
+                "args": {
+                    "separator": "\n",
+                    "src": "./data/lastnames.csv"
+                }
+            }
+        },
+        "fullname": {
+            "loader": {
+                "name": "strformat",
+                "args": {
+                    "format": "%s %s",
+                    "args": [
+                        "FirstName",
+                        "LastName"
+                    ] 
+                }
+            }
+        }
     }
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"testing"
 
 	oarconfig "github.com/elauffenburger/oar/configuration"
@@ -31,26 +32,18 @@ func TestCanLoadFromFile(t *testing.T) {
 func TestCanGenerateNames(t *testing.T) {
 	config, _ := oarconfig.LoadConfigurationFromFile("./data/test.json")
 
-	if len(config.FieldsData.FirstNames) == 0 {
-		t.Fail()
-	}
-
-	if len(config.FieldsData.LastNames) == 0 {
-		t.Fail()
-	}
-
 	results, _ := config.GenerateResults()
 	entries := results.ResultSets[0].Entries
 
-	firstName, err := entries.GetEntryWithName("First Name")
+	firstName, err := entries.GetEntryWithName("FirstName")
 	if err != nil {
 		t.Fail()
 	}
 
-	lastName, _ := entries.GetEntryWithName("Last Name")
-	fullName, _ := entries.GetEntryWithName("Full Name")
+	lastName, _ := entries.GetEntryWithName("LastName")
+	fullName, _ := entries.GetEntryWithName("FullName")
 
-	if config.NewFullNameFromNames(firstName.Value, lastName.Value) != fullName.Value {
+	if fmt.Sprintf("%s %s", firstName.Value, lastName.Value) != fullName.Value {
 		t.Fail()
 	}
 }
@@ -101,11 +94,16 @@ func TestWillGenerateRandomValues(t *testing.T) {
 	results1, _ := config.GenerateResults()
 	results2, _ := config.GenerateResults()
 
-	if results1.ResultSets[0].Entries[4].Value == results2.ResultSets[0].Entries[4].Value {
+	n, n2 := len(results1.ResultSets[0].Entries)-1, len(results2.ResultSets[0].Entries)-1
+	if n != n2 {
 		t.Fail()
 	}
 
-	if results1.ResultSets[0].Entries[4].Value == results1.ResultSets[1].Entries[4].Value {
+	if results1.ResultSets[0].Entries[n].Value == results2.ResultSets[0].Entries[n].Value {
+		t.Fail()
+	}
+
+	if results1.ResultSets[0].Entries[n].Value == results1.ResultSets[1].Entries[n].Value {
 		t.Fail()
 	}
 }
@@ -117,7 +115,7 @@ func TestCanConvertToJsonArray(t *testing.T) {
 	jsonarray := results.ToJsonArray()
 
 	keys := jsonarray[0].Keys()
-	key := keys[4]
+	key := keys[len(keys)-1]
 
 	val1, _ := (*jsonarray[0])[key]
 	val2, _ := (*jsonarray[1])[key]

@@ -11,22 +11,27 @@ import (
 	"strings"
 	"time"
 
-	"strconv"
-
 	"sync"
-
-	fields "github.com/elauffenburger/oar/configuration/fields"
 )
 
+type UseTypeDTO struct {
+	LoaderArgs UseTypeLoaderArgsDTO `json:"loader"`
+}
+
+type UseTypeLoaderArgsDTO struct {
+	Name string                 `json:"name"`
+	Args map[string]interface{} `json:"args"`
+}
+
 type Configuration struct {
-	Fields     fields.ConfigurationFields    `json:"fields"`
-	FieldsData fields.ConfigurationFieldData `json:"-"`
-	NumRows    int                           `json:"numRows"`
-	Options    map[string]string             `json:"options"`
+	Fields  ConfigurationFields   `json:"fields"`
+	NumRows int                   `json:"numRows"`
+	Options map[string]string     `json:"options"`
+	Types   map[string]UseTypeDTO `json:"types"`
 }
 
 func NewConfiguration() *Configuration {
-	return &Configuration{Options: make(map[string]string), Fields: fields.NewConfigurationFields()}
+	return &Configuration{Options: make(map[string]string), Fields: NewConfigurationFields()}
 }
 
 func LoadConfigurationFromJson(content string) (*Configuration, error) {
@@ -40,22 +45,61 @@ func LoadConfigurationFromJson(content string) (*Configuration, error) {
 		return empty, errors.New("Failed to parse json")
 	}
 
-	// load fields from config
-	for _, field := range config.Fields {
-		fieldType, err := GetFieldTypeForField(*field)
+	// hook for options to modify config
+	applyOptions(config)
 
-		if err != nil {
-			// TODO handle case where can't find type for field
+	// load custom types
+	types := generateTypeLoaders(config)
+
+	// load fields
+	loadFields(config, types)
+
+	return config, nil
+}
+
+func generateTypeLoaders(config *Configuration) map[string]*TypeLoader {
+	types := make(map[string]*TypeLoader)
+
+	// load custom types
+	for typename, t := range config.Types {
+		if _, exists := types[typename]; exists {
 			continue
 		}
 
-		field.FieldType = fieldType
+		loadername := t.LoaderArgs.Name
+		factory, ok := loaderFactories[loadername]
+
+		if !ok {
+			// todo handle unknown loader
+			continue
+		}
+
+		// create a loader for this type
+		loader := factory()
+		loader.Load(&t)
+
+		types[typename] = loader
 	}
 
-	// hook for options to modify config
-	readOptions(config)
+	return types
+}
 
-	return config, nil
+func applyOptions(config *Configuration) {
+
+}
+
+func loadFields(config *Configuration, types map[string]*TypeLoader) {
+	// load fields from config
+	for _, field := range config.Fields {
+		loader, ok := types[field.Type]
+
+		if !ok {
+			// todo handle failure
+			continue
+		}
+
+		field.TypeLoader = loader
+	}
 }
 
 func readContentFromFile(path string) (*string, error) {
@@ -82,38 +126,6 @@ func readContentFromFileAndSplit(path string, sep string) ([]string, error) {
 	return strings.Split(*content, sep), nil
 }
 
-func readNamesDataFromRelativePath(rel string) ([]string, error) {
-	abs, err := filepath.Abs(rel)
-	if err != nil {
-		return nil, err
-	}
-
-	names, err := readContentFromFileAndSplit(abs, "\n")
-	if err != nil {
-		return nil, err
-	}
-
-	return names, nil
-}
-
-func readOptions(config *Configuration) {
-	options := config.Options
-
-	// get first names
-	if firstnamespath, ok := options["firstnames"]; ok {
-		if names, err := readNamesDataFromRelativePath(firstnamespath); err == nil {
-			config.FieldsData.FirstNames = names
-		}
-	}
-
-	// get last names
-	if lastnamespath, ok := options["lastnames"]; ok {
-		if names, err := readNamesDataFromRelativePath(lastnamespath); err == nil {
-			config.FieldsData.LastNames = names
-		}
-	}
-}
-
 func LoadConfigurationFromFile(path string) (*Configuration, error) {
 	empty := &Configuration{}
 
@@ -124,15 +136,6 @@ func LoadConfigurationFromFile(path string) (*Configuration, error) {
 	} else {
 		return empty, errors.New(fmt.Sprintf("Could not load file at path '%s'", path))
 	}
-}
-
-func GetFieldTypeForField(field fields.ConfigurationField) (fields.ConfigurationFieldType, error) {
-	converted := fields.ConfigurationFieldType(strings.ToLower(field.Type))
-	if len(converted) == 0 {
-		return fields.Default, nil
-	}
-
-	return converted, nil
 }
 
 func (config *Configuration) GenerateResults() (*Results, error) {
@@ -150,8 +153,14 @@ func (config *Configuration) GenerateResults() (*Results, error) {
 			set := &ResultSet{}
 			for _, field := range config.Fields {
 				entry := &ResultSetEntry{ConfigurationField: *field}
-				entry.Value = config.GetValueForFieldTypeInSet(entry.FieldType, set)
 
+				value, err := config.GetValueForFieldTypeInSet(entry.ConfigurationField, set)
+				if err != nil {
+					// todo handle error
+					continue
+				}
+
+				entry.Value = value
 				set.Entries = append(set.Entries, entry)
 			}
 
@@ -163,49 +172,36 @@ func (config *Configuration) GenerateResults() (*Results, error) {
 	return results, nil
 }
 
-func (config *Configuration) GetValueForFieldTypeInSet(fieldType fields.ConfigurationFieldType, set *ResultSet) string {
-	switch fieldType {
-	case fields.FirstName:
-		return config.NewFirstName()
-	case fields.LastName:
-		return config.NewLastName()
-	case fields.FullName:
-		entries := set.Entries
-
-		if entries.HasFirstAndLastNames() {
-			return config.NewFullNameFromNames(entries.GetFirstAndLastNames())
-		}
-	case fields.String:
-		return ""
-	case fields.Number:
-		return strconv.FormatInt(config.NewNumber(), 10)
-	case fields.DateTime:
-		return config.NewDateTime().Format(time.RFC1123Z)
+func (config *Configuration) GetValueForFieldTypeInSet(field ConfigurationField, set *ResultSet) (string, error) {
+	if field.TypeLoader == nil {
+		return "", errors.New("Failed to find a loader")
 	}
 
-	return ""
+	val, _ := field.TypeLoader.GenerateSingleValue(config, set)
+	return fmt.Sprintf("%s", val), nil
 }
 
-func (config *Configuration) NewFirstName() string {
-	return config.FieldsData.FirstNames.GetRandomValue()
+type ConfigurationField struct {
+	Name       string      `json:"name"`
+	Type       string      `json:"type"`
+	TypeLoader *TypeLoader `json:"-"`
 }
 
-func (config *Configuration) NewLastName() string {
-	return config.FieldsData.LastNames.GetRandomValue()
+type ConfigurationFields []*ConfigurationField
+
+func NewConfigurationFields() ConfigurationFields {
+	return make(ConfigurationFields, 0)
 }
 
-func (config *Configuration) NewFullName() string {
-	return config.NewFullNameFromNames(config.NewFirstName(), config.NewLastName())
+var src = rand.New(rand.NewSource(time.Now().UnixNano()))
+
+func GetRandomValue(list *[]string) string {
+	n := len(*list)
+	randomint := src.Int()
+
+	return (*list)[randomint%n]
 }
 
-func (config *Configuration) NewNumber() int64 {
-	return rand.Int63()
-}
-
-func (config *Configuration) NewDateTime() time.Time {
-	return time.Unix(rand.Int63(), rand.Int63())
-}
-
-func (config *Configuration) NewFullNameFromNames(firstName string, lastName string) string {
-	return fmt.Sprintf("%s %s", firstName, lastName)
+func init() {
+	addDefaultLoaderFactories()
 }
