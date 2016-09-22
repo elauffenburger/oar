@@ -1,0 +1,178 @@
+{
+    "fields": [
+        {
+            "name": "id",
+            "type": "autoincrement"
+        },
+        {
+            "name": "FirstName",
+            "type": "firstname"
+        },
+        {
+            "name": "LastName",
+            "type": "lastname"
+        },
+        {
+            "name": "FullName",
+            "type": "fullname"
+        },
+        {
+            "name": "Company",
+            "type": "company"
+        },
+        {
+            "name": "City",
+            "type": "city"
+        },
+        {
+            "name": "State",
+            "type": "state"
+        },
+        {
+            "name": "Zip",
+            "type": "zip"
+        },
+        {
+            "name": "Address",
+            "type": "address"
+        },
+        {
+            "name": "Phone1",
+            "type": "phone"
+        },
+        {
+            "name": "Phone2",
+            "type": "phone"
+        },
+        {
+            "name": "Email",
+            "type": "email"
+        },
+        {
+            "name": "Web",
+            "type": "website"
+        }
+    ],
+    "options": {
+        "output": "sql"
+    },
+    "types": {
+        "autoincrement": {
+            "loader": {
+                "name": "autoincrement"
+            }
+        },
+        "number": {
+            "loader": {
+                "name": "number"
+            }
+        },
+        "firstname": {
+            "loader": {
+                "name": "csvloader",
+                "args": {
+                    "separator": "\n",
+                    "src": "./data/firstnames.csv"
+                }
+            }
+        },
+        "lastname": {
+            "loader": {
+                "name": "csvloader",
+                "args": {
+                    "separator": "\n",
+                    "src": "./data/lastnames.csv"
+                }
+            }
+        },
+        "fullname": {
+            "loader": {
+                "name": "strformat",
+                "args": {
+                    "format": "%s %s",
+                    "args": [
+                        "FirstName",
+                        "LastName"
+                    ]
+                }
+            }
+        },
+        "company": {
+            "loader": {
+                "name": "csvloader",
+                "args": {
+                    "separator": "\n",
+                    "src": "./data/companies.csv"
+                }
+            }
+        },
+        "city": {
+            "loader": {
+                "name": "csvloader",
+                "args": {
+                    "separator": "\n",
+                    "src": "./data/cities.csv"
+                }
+            }
+        },
+        "state": {
+            "loader": {
+                "name": "csvloader",
+                "args": {
+                    "separator": "\n",
+                    "src": "./data/states.csv"
+                }
+            }
+        },
+        "zip": {
+            "loader": {
+                "name": "csvloader",
+                "args": {
+                    "separator": "\n",
+                    "src": "./data/zipcodes.csv"
+                }
+            }
+        },
+        "address": {
+            "loader": {
+                "name": "csvloader",
+                "args": {
+                    "separator": "\n",
+                    "src": "./data/addresses.csv"
+                }
+            }
+        },
+        "phone": {
+            "loader": {
+                "name": "strformat",
+                "args": {
+                    "format": "555-5555",
+                    "args": [
+
+                    ]
+                }
+            }
+        },
+        "email": {
+            "loader": {
+                "name": "strformat",
+                "args": {
+                    "format": "%s.%s@mailinator.com",
+                    "args": [
+                        "FirstName",
+                        "LastName"
+                    ]
+                }
+            }
+        },
+        "web": {
+            "loader": {
+                "name": "csvloader",
+                "args": {
+                    "separator": "\n",
+                    "src": "./data/domains.csv"
+                }
+            }
+        }
+    }
+}

@@ -2,10 +2,6 @@
     "numRows": 50,
     "fields": [
         {
-            "name": "A Number",
-            "type": "number"
-        },
-        {
             "name": "FirstName",
             "type": "firstname"
         },
@@ -18,9 +14,7 @@
             "type": "fullname"
         }
     ],
-    "options": {
-
-    },
+    "options": {},
     "types": {
         "number": {
             "loader": {
@@ -53,7 +47,7 @@
                     "args": [
                         "FirstName",
                         "LastName"
-                    ] 
+                    ]
                 }
             }
         }

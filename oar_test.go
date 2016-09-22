@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"testing"
 
-	oarconfig "github.com/elauffenburger/oar/configuration"
+	"github.com/elauffenburger/oar/core"
 )
 
 func TestCanLoadFromFile(t *testing.T) {
-	config, err := oarconfig.LoadConfigurationFromFile("./data/test.json")
+	config, err := core.LoadConfigurationFromFile("./test/test.json")
 
 	if err != nil {
 		t.Fail()
@@ -30,10 +30,10 @@ func TestCanLoadFromFile(t *testing.T) {
 }
 
 func TestCanGenerateNames(t *testing.T) {
-	config, _ := oarconfig.LoadConfigurationFromFile("./data/test.json")
+	config, _ := core.LoadConfigurationFromFile("./test/test.json")
 
 	results, _ := config.GenerateResults()
-	entries := results.ResultSets[0].Entries
+	entries := results.ResultSets[0].Values
 
 	firstName, err := entries.GetEntryWithName("FirstName")
 	if err != nil {
@@ -49,15 +49,15 @@ func TestCanGenerateNames(t *testing.T) {
 }
 
 func TestCanConvertToRows(t *testing.T) {
-	config, _ := oarconfig.LoadConfigurationFromFile("./data/test.json")
+	config, _ := core.LoadConfigurationFromFile("./test/test.json")
 	results, _ := config.GenerateResults()
 
 	numentries := results.NumEntries()
-	allEntries := make(map[*oarconfig.ResultSetEntry]bool)
+	allEntries := make(map[*core.ResultsRowValue]bool)
 
 	count := 0
 	for _, set := range results.ResultSets {
-		for _, entry := range set.Entries {
+		for _, entry := range set.Values {
 			allEntries[entry] = false
 
 			count++
@@ -89,27 +89,27 @@ func TestCanConvertToRows(t *testing.T) {
 }
 
 func TestWillGenerateRandomValues(t *testing.T) {
-	config, _ := oarconfig.LoadConfigurationFromFile("./data/test.json")
+	config, _ := core.LoadConfigurationFromFile("./test/test.json")
 
 	results1, _ := config.GenerateResults()
 	results2, _ := config.GenerateResults()
 
-	n, n2 := len(results1.ResultSets[0].Entries)-1, len(results2.ResultSets[0].Entries)-1
+	n, n2 := len(results1.ResultSets[0].Values)-1, len(results2.ResultSets[0].Values)-1
 	if n != n2 {
 		t.Fail()
 	}
 
-	if results1.ResultSets[0].Entries[n].Value == results2.ResultSets[0].Entries[n].Value {
+	if results1.ResultSets[0].Values[n].Value == results2.ResultSets[0].Values[n].Value {
 		t.Fail()
 	}
 
-	if results1.ResultSets[0].Entries[n].Value == results1.ResultSets[1].Entries[n].Value {
+	if results1.ResultSets[0].Values[n].Value == results1.ResultSets[1].Values[n].Value {
 		t.Fail()
 	}
 }
 
 func TestCanConvertToJsonArray(t *testing.T) {
-	config, _ := oarconfig.LoadConfigurationFromFile("./data/test.json")
+	config, _ := core.LoadConfigurationFromFile("./test/test.json")
 
 	results, _ := config.GenerateResults()
 	jsonarray := results.ToJsonArray()

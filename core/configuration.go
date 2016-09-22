@@ -1,4 +1,4 @@
-package configuration
+package core
 
 import (
 	"encoding/json"
@@ -6,9 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math/rand"
-	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"sync"
@@ -29,6 +27,13 @@ type Configuration struct {
 	Options map[string]string     `json:"options"`
 	Types   map[string]UseTypeDTO `json:"types"`
 }
+
+type OutputType string
+
+const (
+	JSON OutputType = "json"
+	SQL  OutputType = "sql"
+)
 
 func NewConfiguration() *Configuration {
 	return &Configuration{Options: make(map[string]string), Fields: NewConfigurationFields()}
@@ -57,73 +62,8 @@ func LoadConfigurationFromJson(content string) (*Configuration, error) {
 	return config, nil
 }
 
-func generateTypeLoaders(config *Configuration) map[string]*TypeLoader {
-	types := make(map[string]*TypeLoader)
-
-	// load custom types
-	for typename, t := range config.Types {
-		if _, exists := types[typename]; exists {
-			continue
-		}
-
-		loadername := t.LoaderArgs.Name
-		factory, ok := loaderFactories[loadername]
-
-		if !ok {
-			// todo handle unknown loader
-			continue
-		}
-
-		// create a loader for this type
-		loader := factory()
-		loader.Load(&t)
-
-		types[typename] = loader
-	}
-
-	return types
-}
-
 func applyOptions(config *Configuration) {
 
-}
-
-func loadFields(config *Configuration, types map[string]*TypeLoader) {
-	// load fields from config
-	for _, field := range config.Fields {
-		loader, ok := types[field.Type]
-
-		if !ok {
-			// todo handle failure
-			continue
-		}
-
-		field.TypeLoader = loader
-	}
-}
-
-func readContentFromFile(path string) (*string, error) {
-	_, err := os.Stat(path)
-	if err != nil {
-		return nil, err
-	}
-
-	bytes, err := ioutil.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-
-	str := string(bytes)
-	return &str, nil
-}
-
-func readContentFromFileAndSplit(path string, sep string) ([]string, error) {
-	content, err := readContentFromFile(path)
-	if err != nil {
-		return nil, err
-	}
-
-	return strings.Split(*content, sep), nil
 }
 
 func LoadConfigurationFromFile(path string) (*Configuration, error) {
@@ -142,7 +82,7 @@ func (config *Configuration) GenerateResults() (*Results, error) {
 	var wg sync.WaitGroup
 
 	numRows := config.NumRows
-	results := &Results{ResultSets: make(ResultSetList, numRows)}
+	results := &Results{ResultSets: make(ResultsRowList, numRows)}
 
 	for i := 0; i < numRows; i++ {
 		wg.Add(1)
@@ -150,9 +90,9 @@ func (config *Configuration) GenerateResults() (*Results, error) {
 		go func(index int) {
 			defer wg.Done()
 
-			set := &ResultSet{}
+			set := &ResultsRow{}
 			for _, field := range config.Fields {
-				entry := &ResultSetEntry{ConfigurationField: *field}
+				entry := &ResultsRowValue{ConfigurationField: *field}
 
 				value, err := config.GetValueForFieldTypeInSet(entry.ConfigurationField, set)
 				if err != nil {
@@ -161,7 +101,7 @@ func (config *Configuration) GenerateResults() (*Results, error) {
 				}
 
 				entry.Value = value
-				set.Entries = append(set.Entries, entry)
+				set.Values = append(set.Values, entry)
 			}
 
 			results.ResultSets[index] = set
@@ -172,34 +112,10 @@ func (config *Configuration) GenerateResults() (*Results, error) {
 	return results, nil
 }
 
-func (config *Configuration) GetValueForFieldTypeInSet(field ConfigurationField, set *ResultSet) (string, error) {
-	if field.TypeLoader == nil {
-		return "", errors.New("Failed to find a loader")
-	}
-
-	val, _ := field.TypeLoader.GenerateSingleValue(config, set)
-	return fmt.Sprintf("%s", val), nil
-}
-
-type ConfigurationField struct {
-	Name       string      `json:"name"`
-	Type       string      `json:"type"`
-	TypeLoader *TypeLoader `json:"-"`
-}
-
-type ConfigurationFields []*ConfigurationField
-
-func NewConfigurationFields() ConfigurationFields {
-	return make(ConfigurationFields, 0)
-}
-
 var src = rand.New(rand.NewSource(time.Now().UnixNano()))
 
 func GetRandomValue(list *[]string) string {
-	n := len(*list)
-	randomint := src.Int()
-
-	return (*list)[randomint%n]
+	return (*list)[rand.Intn(len(*list))]
 }
 
 func init() {
