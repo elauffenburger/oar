@@ -55,7 +55,7 @@ func GenerateResultsWithTypeLoaderContext(config *conf.Configuration, loaderFact
 	var wg sync.WaitGroup
 
 	numRows := config.NumRows
-	results := &res.Results{ResultSets: make(res.ResultsRowList, numRows)}
+	results := &res.Results{Rows: make(res.ResultsRowList, numRows)}
 
 	// generate type loaders to fulfill this config
 	types := BuildTypeLoadersForConfig(config, loaderFactoryContext)
@@ -80,7 +80,7 @@ func GenerateResultsWithTypeLoaderContext(config *conf.Configuration, loaderFact
 				set.Values = append(set.Values, entry)
 			}
 
-			results.ResultSets[index] = set
+			results.Rows[index] = set
 		}(i)
 	}
 
@@ -100,7 +100,16 @@ func GenerateValueForField(config *conf.Configuration, field conf.ConfigurationF
 }
 
 func GetOutputFormatter(config *conf.Configuration) output.OutputFormatter {
-	return &output.JsonOutputFormatter{}
+	outputtype := config.OutputType
+
+	switch outputtype {
+	case conf.JSON:
+		return &output.JsonOutputFormatter{}
+	case conf.SQL:
+		return output.NewSqlOutputFormatter(config.Name)
+	}
+
+	panic("Couldn't figure out which output formatter to use")
 }
 
 func BuildTypeLoadersForConfig(config *conf.Configuration, typeLoaderFactoryCtx *loaders.TypeLoaderFactoryContext) map[string]loaders.TypeLoader {

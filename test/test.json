@@ -1,5 +1,7 @@
 {
-    "numRows": 50,
+    "rows": 50,
+    "output": "json",
+    "name": "TestUser",
     "fields": [
         {
             "name": "FirstName",

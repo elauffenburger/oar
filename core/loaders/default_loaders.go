@@ -8,6 +8,7 @@ import (
 	"github.com/elauffenburger/oar/core/common"
 	conf "github.com/elauffenburger/oar/core/configuration"
 	res "github.com/elauffenburger/oar/core/results"
+	"github.com/satori/go.uuid"
 )
 
 type FnTypeLoader struct {
@@ -152,10 +153,29 @@ func addAutoIncrementFactory(ctx *TypeLoaderFactoryContext) {
 	ctx.AddLoaderFactory("autoincrement", fn)
 }
 
+func addUUIDFactory(ctx *TypeLoaderFactoryContext) {
+	fn := func() TypeLoader {
+		loader := &FnTypeLoader{}
+
+		loader.loadFn = func(dto *conf.UseTypeDTO) {
+
+		}
+
+		loader.generateSingleValueFn = func(config *conf.Configuration, set *res.ResultsRow) (interface{}, error) {
+			return uuid.NewV4().String(), nil
+		}
+
+		return loader
+	}
+
+	ctx.AddLoaderFactory("uuid", fn)
+}
+
 func AddDefaultLoaderFactories(ctx *TypeLoaderFactoryContext) {
 	addCsvLoaderFactory(ctx)
 	addNumberFactory(ctx)
 	addStrFormatFactory(ctx)
 	addDateTimeFactory(ctx)
 	addAutoIncrementFactory(ctx)
+	addUUIDFactory(ctx)
 }

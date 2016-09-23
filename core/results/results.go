@@ -8,7 +8,7 @@ import (
 
 type ResultsRowList []*ResultsRow
 type Results struct {
-	ResultSets ResultsRowList
+	Rows ResultsRowList
 }
 
 type ResultRowValueList []*ResultsRowValue
@@ -50,7 +50,7 @@ func NewRows() []ResultRowValueList {
 }
 
 func (results *Results) NumRows() int {
-	return len(results.ResultSets)
+	return len(results.Rows)
 }
 
 func (results *Results) NumEntries() int {
@@ -60,13 +60,13 @@ func (results *Results) NumEntries() int {
 		return 0
 	}
 
-	return len(results.ResultSets[0].Values) * numrows
+	return len(results.Rows[0].Values) * numrows
 }
 
 func (results *Results) ToRows() []ResultRowValueList {
 	rows := NewRowsOfSize(results.NumRows())
 
-	for i, set := range results.ResultSets {
+	for i, set := range results.Rows {
 		rows[i] = set.Values
 	}
 

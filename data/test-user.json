@@ -1,8 +1,10 @@
 {
+    "name": "TestUser",
+    "output": "sql",
     "fields": [
         {
-            "name": "id",
-            "type": "autoincrement"
+            "name": "Id",
+            "type": "uuid"
         },
         {
             "name": "FirstName",
@@ -11,10 +13,6 @@
         {
             "name": "LastName",
             "type": "lastname"
-        },
-        {
-            "name": "FullName",
-            "type": "fullname"
         },
         {
             "name": "Company",
@@ -53,13 +51,15 @@
             "type": "website"
         }
     ],
-    "options": {
-        "output": "sql"
-    },
     "types": {
         "autoincrement": {
             "loader": {
                 "name": "autoincrement"
+            }
+        },
+        "uuid": {
+            "loader": {
+                "name": "uuid"
             }
         },
         "number": {

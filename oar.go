@@ -11,6 +11,7 @@ import (
 
 var configFlag = flag.String("config", "", "json file to load configuration from")
 var rowsFlag = flag.Int("rows", 0, "number of rows to generate")
+var streamFlag = flag.Bool("stream", false, "Indicates if data should be streamed to stdout")
 
 func main() {
 	flag.Parse()
@@ -38,5 +39,10 @@ func main() {
 
 	// print results to stdout
 	formatter := core.GetOutputFormatter(config)
-	fmt.Fprint(os.Stdout, formatter.Format(results))
+
+	if *streamFlag {
+		formatter.FormatToStream(results, os.Stdout)
+	} else {
+		fmt.Fprint(os.Stdout, formatter.Format(results))
+	}
 }

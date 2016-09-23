@@ -10,10 +10,12 @@ type UseTypeLoaderArgsDTO struct {
 }
 
 type Configuration struct {
-	Fields  ConfigurationFields   `json:"fields"`
-	NumRows int                   `json:"numRows"`
-	Options map[string]string     `json:"options"`
-	Types   map[string]UseTypeDTO `json:"types"`
+	OutputType OutputType            `json:"output"`
+	Name       string                `json:"name`
+	NumRows    int                   `json:"rows"`
+	Fields     ConfigurationFields   `json:"fields"`
+	Options    map[string]string     `json:"options"`
+	Types      map[string]UseTypeDTO `json:"types"`
 }
 
 type OutputType string
